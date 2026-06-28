@@ -112,6 +112,10 @@
     _snap() {
       const tr = this.trackRef.current; if (!tr) return;
       const sc = tr.offsetHeight - window.innerHeight; if (sc <= 0) return;
+      // hors de la zone épinglée (sections du bas, ex. « Nos expertises ») : ne pas snapper,
+      // sinon on ramène l'utilisateur de force dans la scène 3D.
+      const rect = tr.getBoundingClientRect();
+      if (!(rect.top <= 1 && rect.bottom >= window.innerHeight - 1)) return;
       const top = tr.offsetTop;
       const p = (window.scrollY - top) / sc;
       const stops = this._stops, last = stops.length - 1;
