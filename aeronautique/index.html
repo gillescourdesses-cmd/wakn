@@ -25,6 +25,9 @@
   .menu-link:hover{color:#5EBCA5 !important;}
   .expertise-card:hover{transform:translateY(-6px);background:rgba(94,188,165,0.1) !important;border-color:rgba(94,188,165,0.45) !important;}
   .footer-link:hover{color:#5EBCA5 !important;}
+  .footer-social:hover{background:#06343b !important;color:#fff !important;}
+  .footer-link2:hover{opacity:.65;}
+  [data-totop]:hover{opacity:1 !important;}
   .cta:hover{transform:translateY(-3px);}
   .chap-link:hover{color:#43B59A !important;}
 
@@ -202,11 +205,20 @@
     </div>
   </section>
 
-  <footer style="background:#eef4f2;border-top:1px solid rgba(6,52,59,0.1);padding:30px clamp(20px,5vw,64px);">
-    <div style="max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;">
-      <img src="assets/wakn-logo.png" alt="Wakn" style="height:24px;width:auto;" />
-      <span style="font-size:13px;font-weight:300;color:#5b7d78;">1 avenue Clément Ader · 31770 Colomiers · © 2026 Wakn</span>
-      <div style="display:flex;gap:22px;"><a class="footer-link" href="https://www.wakn.fr/mentions-legales" target="_top" rel="noopener" style="font-size:13px;color:#3f5e59;">Mentions légales</a><a class="footer-link" href="https://www.wakn.fr/website/social/linkedin" target="_top" rel="noopener" style="font-size:13px;color:#3f5e59;">LinkedIn</a></div>
+  <footer style="background:#2f9e86;color:#06343b;padding:clamp(48px,8vh,76px) clamp(20px,5vw,64px) 26px;text-align:center;">
+    <div style="max-width:1180px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:clamp(20px,3.6vh,32px);">
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
+        <span style="font-size:18px;font-weight:600;color:#06343b;">Suivez-nous</span>
+        <a class="footer-social" href="https://www.wakn.fr/website/social/linkedin" target="_top" rel="noopener" aria-label="LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;border:1.6px solid #06343b;color:#06343b;font-size:14px;font-weight:700;transition:background .25s ease,color .25s ease;">in</a>
+      </div>
+      <img src="assets/wakn-logo.png" alt="Wakn" style="height:clamp(70px,11vw,118px);width:auto;filter:brightness(0);" />
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;font-size:14px;color:#06343b;">
+        <span style="font-weight:500;">1 avenue Clément Ader • 31770 Colomiers • France</span>
+        <span style="opacity:.45;">/</span>
+        <a class="footer-link2" href="https://www.wakn.fr/mentions-legales" target="_top" rel="noopener" style="font-weight:700;color:#06343b;transition:opacity .2s ease;">Mentions légales</a>
+      </div>
+      <span style="font-size:14px;font-weight:300;color:#0c463f;">Wakn – Copyright © 2026</span>
+      <a href="#" data-totop aria-label="Haut de page" style="display:inline-flex;align-items:center;justify-content:center;color:#06343b;font-size:22px;line-height:1;opacity:.65;transition:opacity .2s ease;margin-top:2px;">︿</a>
     </div>
   </footer>
 
