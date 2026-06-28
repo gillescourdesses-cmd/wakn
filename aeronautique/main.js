@@ -183,7 +183,7 @@
         { p: 0.53, pos: [3, -1.0, 0], look: [-12, -1.1, 0], fov: 62 },    // DANS la cabine, parmi les sièges — Transformation digitale
         { p: 0.63, pos: [-5, -1.0, 0], look: [-15, -1.1, 0], fov: 60 },   // avance vers l'avant de cabine
         { p: 0.69, pos: [-13.6, -1.15, 0], look: [-17, -1.7, 0], fov: 68 }, // entrée cockpit
-        { p: 0.72, pos: [-15.4, -1.2, 0], look: [-18, -1.85, 0], fov: 75 }, // DANS LE COCKPIT — Aux commandes
+        { p: 0.72, pos: [-14.4, -1.2, 0], look: [-17.5, -1.82, 0], fov: 73 }, // DANS LE COCKPIT — Aux commandes (légèrement reculé)
         { p: 0.76, pos: [-13.5, 0.2, 7], look: [-12, -1, 0], fov: 60 },   // sortie latérale du cockpit (vers l'arrière)
         { p: 0.82, pos: [-4, 3, 18], look: [-3, -0.2, 0], fov: 50 },      // dehors, avant-gauche, recul continu
         { p: 0.90, pos: [18, 5, 25], look: [2, 1.2, 0], fov: 46 },        // arc vers l'arrière-droit
