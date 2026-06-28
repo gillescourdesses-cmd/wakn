@@ -7,13 +7,20 @@ plan « en vol ».
 
 ## Stack
 
-Site **statique** — aucun build requis.
+Site **statique** — aucun build requis. Conçu pour être servi à l'URL
+**`wakn.fr/aeronautique`** : tout le site vit dans le dossier `aeronautique/`,
+avec des chemins **relatifs** (fonctionne quel que soit le préfixe d'URL).
 
 | Fichier | Rôle |
 |---|---|
-| `index.html` | Markup + styles inline + chargement des dépendances |
-| `main.js` | Logique Three.js : scène, caméra (keyframes), bascule des modèles, moteur de scroll « snap » |
-| `assets/` | Modèles 3D, textures et logo |
+| `aeronautique/index.html` | Markup + styles inline + chargement des dépendances |
+| `aeronautique/main.js` | Logique Three.js : scène, caméra (keyframes), bascule des modèles, moteur de scroll « snap » |
+| `aeronautique/assets/` | Modèles 3D, textures et logo |
+
+### Déploiement FTP
+
+Déposez le dossier `aeronautique/` à la racine web du serveur (`www/`,
+`public_html/` ou `htdocs/`) → la page est servie à `wakn.fr/aeronautique`.
 
 Rendu 3D : **Three.js r128** (chargé via CDN, avec `GLTFLoader`, `ColladaLoader`,
 `BufferGeometryUtils`, `RoomEnvironment`). Police **Poppins** (Google Fonts).
