@@ -46,6 +46,7 @@
     [data-hint-desktop]{display:none !important;}
     [data-hint-mobile]{display:block !important;}
     #hintRef [data-hint-arrow]{font-size:24px !important;}
+    #hintRef{bottom:calc(70px + env(safe-area-inset-bottom,0px)) !important;}
   }
 
   @media (max-width:980px){
@@ -164,7 +165,7 @@
         </div>
       </div>
 
-      <div id="hintRef" style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none;"><span data-hint-desktop style="font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:#6f9a94;">Défiler — de la FAL au ciel</span><span data-hint-mobile style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#bcd8d2;">Faites défiler</span><span data-hint-arrow style="font-size:15px;color:#1f9d86;animation:waknScroll 1.8s ease-in-out infinite;">↓</span></div>
+      <div id="hintRef" style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none;"><span data-hint-desktop style="font-size:13px;letter-spacing:2.4px;text-transform:uppercase;color:#6f9a94;">Défiler — de la FAL au ciel</span><span data-hint-mobile style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#bcd8d2;">Faites défiler</span><span data-hint-arrow style="font-size:20px;color:#1f9d86;animation:waknScroll 1.8s ease-in-out infinite;">↓</span></div>
     </div>
   </div>
 
