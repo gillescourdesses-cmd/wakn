@@ -34,6 +34,7 @@
       this.navLogoRef = domRef('navLogoRef');
       this.expertiseRef = domRef('expertiseRef');
       this.vignetteRef = domRef('vignetteRef');
+      this.navRef = domRef('navRef');
     }
 
     // --- handlers (anciennement renderVals) ---
@@ -325,8 +326,13 @@
       this._p += (this._tp - this._p) * 0.08;
       this._mo.x += (this._mt.x - this._mo.x) * 0.05; this._mo.y += (this._mt.y - this._mo.y) * 0.05;
       this._update(this._p);
-      const nl = this.navLogoRef.current, ex = this.expertiseRef.current;
-      if (nl && ex) { const over = window.innerWidth <= 820 && ex.getBoundingClientRect().top < 72; nl.style.opacity = over ? '0' : '1'; nl.style.pointerEvents = over ? 'none' : 'auto'; }
+      const nl = this.navLogoRef.current, ex = this.expertiseRef.current, navEl = this.navRef.current;
+      if (ex) {
+        const r = ex.getBoundingClientRect();
+        if (nl) { const over = window.innerWidth <= 820 && r.top < 72; nl.style.opacity = over ? '0' : '1'; nl.style.pointerEvents = over ? 'none' : 'auto'; }
+        // menu clair tant que la nav survole la section sombre (commence au-dessus de la nav, finit en dessous)
+        if (navEl) { const navH = navEl.offsetHeight || 78; navEl.classList.toggle('nav-dark', r.top < navH && r.bottom > navH); }
+      }
       this._renderer.render(this._scene, this._camera);
     }
 
