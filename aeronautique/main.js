@@ -56,58 +56,9 @@
       this._onMouse = (e) => { this._mt.x = (e.clientX / window.innerWidth - 0.5) * 2; this._mt.y = (e.clientY / window.innerHeight - 0.5) * 2; };
       window.addEventListener('mousemove', this._onMouse, { passive: true });
       this._stops = [0.04, 0.31, 0.53, 0.72, 0.92];
-      this._lastY = window.scrollY; this._scrollDir = 0;
-      this._onScrollSnap = () => { const y = window.scrollY; this._scrollDir = y - this._lastY; this._lastY = y; if (this._snapping) return; if (this._snapTimer) clearTimeout(this._snapTimer); this._snapTimer = setTimeout(() => this._snap(), 165); };
-      window.addEventListener('scroll', this._onScrollSnap, { passive: true });
-
-      this._wheelLock = false;
-      this._armUnlock = () => {
-        clearTimeout(this._wheelCd);
-        this._wheelCd = setTimeout(() => { if (this._snapping) this._armUnlock(); else this._wheelLock = false; }, 150);
-      };
-      const canCapture = (dir) => {
-        const tr = this.trackRef.current; if (!tr) return null;
-        const sc = tr.offsetHeight - window.innerHeight; if (sc <= 0) return null;
-        const rect = tr.getBoundingClientRect();
-        const inPinned = rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
-        if (!inPinned) return null;
-        const last = this._stops.length - 1;
-        if (dir > 0 && this._idx >= last) return null;   // sortir vers les sections du bas
-        if (dir < 0 && this._idx <= 0) return null;       // remonter en haut de page
-        return { tr, sc, last };
-      };
-      const fireStep = (dir) => {
-        const ctx = canCapture(dir); if (!ctx) return false;   // geste non capturé -> scroll natif (sortie)
-        this._armUnlock();                                      // tout geste réarme le verrou (anti-inertie)
-        if (this._wheelLock || this._snapping) return true;     // déjà en transition : on bloque
-        const ni = Math.max(0, Math.min(ctx.last, this._idx + dir));
-        if (ni === this._idx) return true;
-        this._idx = ni;
-        this._wheelLock = true;
-        this._snapTo(Math.round(ctx.tr.offsetTop + this._stops[ni] * ctx.sc));
-        return true;
-      };
-      this._onWheel = (e) => { const d = e.deltaY > 0 ? 1 : (e.deltaY < 0 ? -1 : 0); if (!d) return; if (fireStep(d)) e.preventDefault(); };
-      window.addEventListener('wheel', this._onWheel, { passive: false });
-      this._onKey = (e) => {
-        let d = 0;
-        if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ' || e.key === 'Spacebar') d = 1;
-        else if (e.key === 'ArrowUp' || e.key === 'PageUp') d = -1;
-        if (!d) return; if (fireStep(d)) e.preventDefault();
-      };
-      window.addEventListener('keydown', this._onKey);
-      this._touchY = null;
-      this._onTS = (e) => { this._touchY = e.touches && e.touches[0] ? e.touches[0].clientY : null; };
-      this._onTM = (e) => {
-        if (this._touchY == null) return;
-        const y = e.touches && e.touches[0] ? e.touches[0].clientY : this._touchY;
-        const dy = this._touchY - y;
-        if (Math.abs(dy) < 26) return;
-        const d = dy > 0 ? 1 : -1;
-        if (fireStep(d)) { e.preventDefault(); this._touchY = null; }
-      };
-      window.addEventListener('touchstart', this._onTS, { passive: true });
-      window.addEventListener('touchmove', this._onTM, { passive: false });
+      // Défilement natif et continu : on ne capture plus la molette/le clavier/le tactile
+      // et on ne « snappe » plus par chapitre. La caméra suit la progression de scroll en
+      // douceur (lissage dans _frame). Le rail d'ancres utilise goStage (_snapTo) au clic.
     }
     _snap() {
       const tr = this.trackRef.current; if (!tr) return;
@@ -328,7 +279,7 @@
       const tr = this.trackRef.current;
       if (tr) { const sc = tr.offsetHeight - window.innerHeight; if (sc > 0) this._tp = Math.max(0, Math.min(1, (-tr.getBoundingClientRect().top) / sc)); }
       if (window.__waknP != null) this._tp = window.__waknP;
-      this._p += (this._tp - this._p) * 0.08;
+      this._p += (this._tp - this._p) * 0.1;
       this._mo.x += (this._mt.x - this._mo.x) * 0.05; this._mo.y += (this._mt.y - this._mo.y) * 0.05;
       this._update(this._p);
       const nl = this.navLogoRef.current, ex = this.expertiseRef.current, navEl = this.navRef.current;
