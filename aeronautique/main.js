@@ -60,7 +60,7 @@
       // Défilement natif et continu (pas de capture molette/tactile/clavier), MAIS on guide
       // l'utilisateur : à l'arrêt du scroll, on rejoint en douceur le chapitre le plus proche.
       this._lastY = window.scrollY; this._scrollDir = 0;
-      this._onScrollSnap = () => { const y = window.scrollY; this._scrollDir = y - this._lastY; this._lastY = y; if (this._snapping) return; if (this._snapTimer) clearTimeout(this._snapTimer); this._snapTimer = setTimeout(() => this._snap(), 220); };
+      this._onScrollSnap = () => { const y = window.scrollY; this._scrollDir = y - this._lastY; this._lastY = y; if (this._snapping) return; if (this._snapTimer) clearTimeout(this._snapTimer); this._snapTimer = setTimeout(() => this._snap(), 140); };
       window.addEventListener('scroll', this._onScrollSnap, { passive: true });
     }
     _snap() {
@@ -140,7 +140,8 @@
         { p: 0.47, pos: [9, -1.0, 0], look: [-6, -1.1, 0], fov: 64 },     // ENTREE arrière de cabine, regard avant (-X)
         { p: 0.53, pos: [3, -1.0, 0], look: [-12, -1.1, 0], fov: 62 },    // DANS la cabine, parmi les sièges — Transformation digitale
         { p: 0.63, pos: [-5, -1.0, 0], look: [-15, -1.1, 0], fov: 60 },   // avance vers l'avant de cabine
-        { p: 0.69, pos: [-13.6, -1.15, 0], look: [-17, -1.7, 0], fov: 68 }, // entrée cockpit
+        // (keyframe « entrée cockpit » p=0.69 retiré : évitait un ralenti/arrêt à la porte ;
+        //  l'entrée se fait désormais d'un seul mouvement continu, vignette à l'appui)
         { p: 0.72, pos: [-14.4, -1.2, 0], look: [-17.5, -1.82, 0], fov: 73 }, // DANS LE COCKPIT — Aux commandes (légèrement reculé)
         { p: 0.76, pos: [-13.5, 0.2, 7], look: [-12, -1, 0], fov: 60 },   // sortie latérale du cockpit (vers l'arrière)
         { p: 0.82, pos: [-4, 3, 18], look: [-3, -0.2, 0], fov: 50 },      // dehors, avant-gauche, recul continu
