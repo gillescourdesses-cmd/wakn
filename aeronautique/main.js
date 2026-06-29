@@ -35,7 +35,7 @@
       this.expertiseRef = domRef('expertiseRef');
       this.vignetteRef = domRef('vignetteRef');
       this.navRef = domRef('navRef');
-      this.vrailFillRef = domRef('vrailFillRef');
+      this.mrailRef = domRef('mrailRef');
     }
 
     // --- handlers (anciennement renderVals) ---
@@ -46,7 +46,7 @@
     _bindUI() {
       document.querySelectorAll('[data-action="openMenu"]').forEach((el) => el.addEventListener('click', () => this.openMenu()));
       document.querySelectorAll('[data-action="closeMenu"]').forEach((el) => el.addEventListener('click', () => this.closeMenu()));
-      document.querySelectorAll('.rail-btn').forEach((el) => el.addEventListener('click', (e) => this.goStage(e)));
+      document.querySelectorAll('.rail-btn,.mrail-btn').forEach((el) => el.addEventListener('click', (e) => this.goStage(e)));
     }
 
     mount() {
@@ -57,9 +57,11 @@
       this._onMouse = (e) => { this._mt.x = (e.clientX / window.innerWidth - 0.5) * 2; this._mt.y = (e.clientY / window.innerHeight - 0.5) * 2; };
       window.addEventListener('mousemove', this._onMouse, { passive: true });
       this._stops = [0.04, 0.31, 0.53, 0.72, 0.92];
-      // Défilement natif et continu : on ne capture plus la molette/le clavier/le tactile
-      // et on ne « snappe » plus par chapitre. La caméra suit la progression de scroll en
-      // douceur (lissage dans _frame). Le rail d'ancres utilise goStage (_snapTo) au clic.
+      // Défilement natif et continu (pas de capture molette/tactile/clavier), MAIS on guide
+      // l'utilisateur : à l'arrêt du scroll, on rejoint en douceur le chapitre le plus proche.
+      this._lastY = window.scrollY; this._scrollDir = 0;
+      this._onScrollSnap = () => { const y = window.scrollY; this._scrollDir = y - this._lastY; this._lastY = y; if (this._snapping) return; if (this._snapTimer) clearTimeout(this._snapTimer); this._snapTimer = setTimeout(() => this._snap(), 220); };
+      window.addEventListener('scroll', this._onScrollSnap, { passive: true });
     }
     _snap() {
       const tr = this.trackRef.current; if (!tr) return;
@@ -283,13 +285,9 @@
       this._p += (this._tp - this._p) * 0.1;
       this._mo.x += (this._mt.x - this._mo.x) * 0.05; this._mo.y += (this._mt.y - this._mo.y) * 0.05;
       this._update(this._p);
-      const nl = this.navLogoRef.current, ex = this.expertiseRef.current, navEl = this.navRef.current;
-      if (ex) {
-        const r = ex.getBoundingClientRect();
-        if (nl) { const over = window.innerWidth <= 820 && r.top < 72; nl.style.opacity = over ? '0' : '1'; nl.style.pointerEvents = over ? 'none' : 'auto'; }
-        // menu clair tant que la nav survole la section sombre (commence au-dessus de la nav, finit en dessous)
-        if (navEl) { const navH = navEl.offsetHeight || 78; navEl.classList.toggle('nav-dark', r.top < navH && r.bottom > navH); }
-      }
+      const nl = this.navLogoRef.current, ex = this.expertiseRef.current;
+      // nav toujours en clair (classe nav-dark permanente + fondu sombre en haut) : pas de bascule.
+      if (nl && ex) { const over = window.innerWidth <= 820 && ex.getBoundingClientRect().top < 72; nl.style.opacity = over ? '0' : '1'; nl.style.pointerEvents = over ? 'none' : 'auto'; }
       this._renderer.render(this._scene, this._camera);
     }
 
@@ -374,7 +372,7 @@
       if (this.scrimRef.current) this.scrimRef.current.style.opacity = (1 - this._sm(0.82, 0.92, p)).toFixed(3);
       const rail = this.railRef.current; if (rail) { const cs = [0.06, 0.31, 0.53, 0.72, 0.92]; let ai = 0, bd = 9; cs.forEach((v, k) => { const dd = Math.abs(p - v); if (dd < bd) { bd = dd; ai = k; } }); Array.prototype.forEach.call(rail.children, (el, k) => { el.style.opacity = k === ai ? '1' : '0.38'; }); }
       if (this.barRef.current) this.barRef.current.style.width = (p * 100).toFixed(2) + '%';
-      if (this.vrailFillRef.current) this.vrailFillRef.current.style.height = (p * 100).toFixed(1) + '%';
+      const mrail = this.mrailRef.current; if (mrail) { const cs = [0.06, 0.31, 0.53, 0.72, 0.92]; let ai = 0, bd = 9; cs.forEach((v, k) => { const dd = Math.abs(p - v); if (dd < bd) { bd = dd; ai = k; } }); Array.prototype.forEach.call(mrail.children, (el, k) => { el.style.opacity = k === ai ? '1' : '0.4'; el.style.fontWeight = k === ai ? '700' : '600'; }); }
       if (this.hintRef.current) this.hintRef.current.style.opacity = (1 - this._sm(0.02, 0.08, p)).toFixed(2);
     }
   }
