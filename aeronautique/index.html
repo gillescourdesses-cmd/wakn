@@ -239,6 +239,7 @@
 <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/ColladaLoader.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
-<script src="main.js"></script>
+<script>/* charge main.js avec un cache-buster horodaté : le JS est toujours récupéré frais */
+(function(){var s=document.createElement('script');s.src='main.js?cb='+Date.now();document.body.appendChild(s);})();</script>
 </body>
 </html>
