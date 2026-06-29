@@ -35,6 +35,7 @@
       this.expertiseRef = domRef('expertiseRef');
       this.vignetteRef = domRef('vignetteRef');
       this.navRef = domRef('navRef');
+      this.vrailFillRef = domRef('vrailFillRef');
     }
 
     // --- handlers (anciennement renderVals) ---
@@ -343,8 +344,10 @@
       // vignette: bump while crossing the fuselage into the cabin
       if (this.vignetteRef.current) {
         const cross = this._sm(0.40, 0.45, p) * (1 - this._sm(0.46, 0.50, p));
+        // passage cabine -> cockpit : pulse de vignette pour masquer la traversée de la porte
+        const crossCockpit = this._sm(0.63, 0.665, p) * (1 - this._sm(0.695, 0.72, p));
         const insideSoft = inside * 0.28;
-        this.vignetteRef.current.style.opacity = Math.max(cross * 0.95, insideSoft).toFixed(3);
+        this.vignetteRef.current.style.opacity = Math.max(cross * 0.95, crossCockpit * 0.92, insideSoft).toFixed(3);
       }
 
       // speed streaks during flight
@@ -371,6 +374,7 @@
       if (this.scrimRef.current) this.scrimRef.current.style.opacity = (1 - this._sm(0.82, 0.92, p)).toFixed(3);
       const rail = this.railRef.current; if (rail) { const cs = [0.06, 0.31, 0.53, 0.72, 0.92]; let ai = 0, bd = 9; cs.forEach((v, k) => { const dd = Math.abs(p - v); if (dd < bd) { bd = dd; ai = k; } }); Array.prototype.forEach.call(rail.children, (el, k) => { el.style.opacity = k === ai ? '1' : '0.38'; }); }
       if (this.barRef.current) this.barRef.current.style.width = (p * 100).toFixed(2) + '%';
+      if (this.vrailFillRef.current) this.vrailFillRef.current.style.height = (p * 100).toFixed(1) + '%';
       if (this.hintRef.current) this.hintRef.current.style.opacity = (1 - this._sm(0.02, 0.08, p)).toFixed(2);
     }
   }
