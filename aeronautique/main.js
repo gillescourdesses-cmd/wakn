@@ -41,7 +41,7 @@
     // --- handlers (anciennement renderVals) ---
     openMenu() { const m = this.menuRef.current; if (m) { m.style.transform = 'translateY(0)'; m.style.pointerEvents = 'auto'; } }
     closeMenu() { const m = this.menuRef.current; if (m) { m.style.transform = 'translateY(-100%)'; m.style.pointerEvents = 'none'; } }
-    goStage(e) { if (e && e.preventDefault) e.preventDefault(); const tr = this.trackRef.current; if (!tr) return; const cs = [0.04, 0.31, 0.53, 0.72, 0.93]; const i = +e.currentTarget.dataset.stage; this._idx = i; const sc = tr.offsetHeight - window.innerHeight; this._snapTo(Math.round(tr.offsetTop + cs[i] * sc)); }
+    goStage(e) { if (e && e.preventDefault) e.preventDefault(); const tr = this.trackRef.current; if (!tr) return; const cs = [0.06, 0.31, 0.53, 0.72, 0.92]; const i = +e.currentTarget.dataset.stage; this._idx = i; const sc = tr.offsetHeight - window.innerHeight; this._snapTo(Math.round(tr.offsetTop + cs[i] * sc)); }
 
     _bindUI() {
       document.querySelectorAll('[data-action="openMenu"]').forEach((el) => el.addEventListener('click', () => this.openMenu()));
@@ -56,7 +56,7 @@
       this._initThree();
       this._onMouse = (e) => { this._mt.x = (e.clientX / window.innerWidth - 0.5) * 2; this._mt.y = (e.clientY / window.innerHeight - 0.5) * 2; };
       window.addEventListener('mousemove', this._onMouse, { passive: true });
-      this._stops = [0.04, 0.31, 0.53, 0.72, 0.92];
+      this._stops = [0.06, 0.31, 0.53, 0.72, 0.92];   // alignés sur le centre des sections (cockpit = 0.72)
       // Défilement natif et continu (pas de capture molette/tactile/clavier), MAIS on guide
       // l'utilisateur : à l'arrêt du scroll, on rejoint en douceur le chapitre le plus proche.
       this._lastY = window.scrollY; this._scrollDir = 0;
