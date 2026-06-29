@@ -330,12 +330,15 @@
 
       // hangar visible for exterior ground chapters, fades before entering cabin
       if (this._hangar) {
-        const hf = 1 - this._sm(0.28, 0.39, p);
+        // fondu décalé plus tard (0.40 -> 0.46) pour rester solide pendant « Gestion de projet » (p≈0.31)
+        const hf = 1 - this._sm(0.40, 0.46, p);
         if (hf <= 0.01) { if (this._hangar.visible) { this._hangar.visible = false; if (this._scene) this._scene.fog = null; } }
         else {
           if (!this._hangar.visible) { this._hangar.visible = true; if (this._scene && !this._scene.fog) this._scene.fog = new (window.THREE.Fog)(0xdfeae7, 70, 240); }
           const fading = hf < 0.995;
-          this._hangarMats.forEach((e) => { e.m.opacity = (e.glass ? e.baseOp : 1) * hf; e.m.transparent = e.glass || fading; e.m.depthWrite = e.glass ? false : !fading; });
+          // depthWrite conservé pour les matériaux opaques (non vitrés) même en fondu :
+          // évite le mauvais tri des panneaux du toit (effet « moitié affichée »).
+          this._hangarMats.forEach((e) => { e.m.opacity = (e.glass ? e.baseOp : 1) * hf; e.m.transparent = e.glass || fading; e.m.depthWrite = !e.glass; });
         }
       }
 
