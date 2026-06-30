@@ -204,11 +204,10 @@
       gltf.load('assets/hangar/hangar.glb', (hg) => {
         try {
           const h = hg.scene;
-          // masque l'avion intégré + les passerelles de maintenance (docking stations / accès / garde-corps
-          // mobiles) qui traversaient notre avion (réacteur, aile). On garde murs, toit, vitres, piliers, caisses…
-          h.traverse((o) => { const n = o.name || ''; if (/SM_Aircraft|ThirdPersonCharacter|FollowCamera|DockingStation|AccessStand|GEN_VARIABLE/i.test(n)) o.visible = false; });
+          h.traverse((o) => { const n = o.name || ''; if (/SM_Aircraft|ThirdPersonCharacter|FollowCamera/i.test(n)) o.visible = false; });
           this._recolorHangar(T, h);
           const k = 1.55; const grp = new T.Group(); grp.add(h); grp.scale.setScalar(k); grp.position.set(0, -4.1 * k, -9.4 * k); scene.add(grp); this._hangar = grp;
+          this._cullHangarGantries();   // masque uniquement les passerelles qui chevauchent l'avion (garde le reste : look FAL)
         } catch (e) { console.error('hangar', e); }
       }, undefined, (e) => { console.error('hangar', e); });
 
@@ -252,6 +251,25 @@
         this._extReady = true; this._maybeHideLoader();
       }, undefined, () => { this._extReady = true; this._maybeHideLoader(); });
       const outer = new T.Group(); outer.add(model); outer.visible = false; this._ac.add(outer); this._extPlane = outer;
+      model.updateMatrixWorld(true);
+      this._planeBox = new T.Box3().setFromObject(model);   // volume de notre avion (pour masquer les passerelles qui le chevauchent)
+      this._cullHangarGantries();
+    }
+
+    _cullHangarGantries() {
+      // masque seulement les passerelles de maintenance qui chevauchent le volume de l'avion
+      // (réacteur, aile…) ; les autres restent pour conserver l'ambiance « ligne d'assemblage ».
+      if (this._gantriesCulled || !this._hangar || !this._planeBox) return;
+      this._gantriesCulled = true;
+      const T = window.THREE;
+      const box = this._planeBox.clone(); box.expandByScalar(0.4);
+      this._hangar.updateMatrixWorld(true);
+      const tmp = new T.Box3();
+      this._hangar.traverse((o) => {
+        if (!o.isMesh || !/DockingStation|AccessStand|GEN_VARIABLE/i.test(o.name || '')) return;
+        tmp.setFromObject(o);
+        if (!tmp.isEmpty() && tmp.intersectsBox(box)) o.visible = false;
+      });
     }
 
     _maybeHideLoader() {
