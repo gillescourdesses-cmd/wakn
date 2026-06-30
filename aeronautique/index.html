@@ -9,6 +9,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="assets/wakn-logo.png">
+<!-- démarre le téléchargement des gros modèles en parallèle des scripts Three.js (gain au chargement) -->
+<link rel="preload" href="assets/cockpit/scene-compressed.glb" as="fetch" crossorigin="anonymous">
+<link rel="preload" href="assets/a320-interior/model.dae" as="fetch" crossorigin="anonymous">
 <style>
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}

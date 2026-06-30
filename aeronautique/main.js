@@ -257,9 +257,21 @@
     }
 
     _cullHangarGantries() {
-      // Toutes les passerelles restent visibles (ambiance FAL). Le ciblage automatique
-      // de la seule passerelle du moteur n'est pas fiable à l'aveugle (le modèle d'avion
-      // n'a pas de noms exploitables) : on n'en masque donc aucune pour l'instant.
+      // On retire uniquement la/les passerelle(s) qui pénètrent VRAIMENT l'avion, en testant
+      // l'intersection contre les boîtes SERRÉES de chaque sous-maillage de l'avion (réacteur,
+      // aile, fuselage…) et non contre la boîte globale (trop large, désignait la mauvaise).
+      if (this._gantriesFixed || !this._hangar || !this._extPlane) return;
+      this._gantriesFixed = true;
+      const T = window.THREE;
+      this._hangar.updateMatrixWorld(true); this._extPlane.updateMatrixWorld(true);
+      const planeBoxes = [];
+      this._extPlane.traverse((o) => { if (o.isMesh && o.geometry) { const b = new T.Box3().setFromObject(o); if (!b.isEmpty()) planeBoxes.push(b); } });
+      if (!planeBoxes.length) return;
+      const gant = [];
+      this._hangar.traverse((o) => { if (o.isMesh && /DockingStation|AccessStand|GEN_VARIABLE/i.test(o.name || '')) { const b = new T.Box3().setFromObject(o); if (!b.isEmpty()) gant.push({ o: o, c: b.getCenter(new T.Vector3()), b: b }); } });
+      const clips = gant.filter((g) => planeBoxes.some((pb) => g.b.intersectsBox(pb)));
+      // masque chaque cluster (passerelle complète) autour d'un maillage qui pénètre l'avion
+      clips.forEach((cl) => { gant.forEach((g) => { if (g.c.distanceTo(cl.c) < 4) g.o.visible = false; }); });
     }
 
     _maybeHideLoader() {
