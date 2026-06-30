@@ -257,19 +257,24 @@
     }
 
     _cullHangarGantries() {
-      // masque seulement les passerelles de maintenance qui chevauchent le volume de l'avion
-      // (réacteur, aile…) ; les autres restent pour conserver l'ambiance « ligne d'assemblage ».
+      // On garde TOUTES les passerelles (ambiance FAL) et on ne retire que le cluster
+      // autour de la passerelle qui pénètre le plus l'avion (celle au niveau du moteur).
       if (this._gantriesCulled || !this._hangar || !this._planeBox) return;
       this._gantriesCulled = true;
       const T = window.THREE;
-      const box = this._planeBox.clone(); box.expandByScalar(0.4);
       this._hangar.updateMatrixWorld(true);
-      const tmp = new T.Box3();
+      const plane = this._planeBox;
+      const gant = [];
       this._hangar.traverse((o) => {
         if (!o.isMesh || !/DockingStation|AccessStand|GEN_VARIABLE/i.test(o.name || '')) return;
-        tmp.setFromObject(o);
-        if (!tmp.isEmpty() && tmp.intersectsBox(box)) o.visible = false;
+        const bb = new T.Box3().setFromObject(o);
+        if (!bb.isEmpty()) gant.push({ o: o, c: bb.getCenter(new T.Vector3()), bb: bb });
       });
+      const overlap = (a, b) => { const ix = Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x); const iy = Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y); const iz = Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z); return (ix > 0 && iy > 0 && iz > 0) ? ix * iy * iz : 0; };
+      let worst = null, wv = 0;
+      gant.forEach((g) => { const v = overlap(g.bb, plane); if (v > wv) { wv = v; worst = g; } });
+      if (!worst) return;                                  // aucune passerelle ne pénètre l'avion : on ne retire rien
+      gant.forEach((g) => { if (g.c.distanceTo(worst.c) < 4.5) g.o.visible = false; });  // retire le cluster autour du pire chevauchement
     }
 
     _maybeHideLoader() {
