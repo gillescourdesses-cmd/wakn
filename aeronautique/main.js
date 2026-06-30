@@ -208,19 +208,18 @@
           this._recolorHangar(T, h);
           const k = 1.55; const grp = new T.Group(); grp.add(h); grp.scale.setScalar(k); grp.position.set(0, -4.1 * k, -9.4 * k); scene.add(grp); this._hangar = grp;
           this._cullHangarGantries();
-          this._hangarReady = true; this._maybeHideLoader();
-        } catch (e) { console.error('hangar', e); this._hangarReady = true; this._maybeHideLoader(); }
-      }, undefined, (e) => { console.error('hangar', e); this._hangarReady = true; this._maybeHideLoader(); });
+        } catch (e) { console.error('hangar', e); }
+      }, undefined, (e) => { console.error('hangar', e); });
 
-      // Avion extérieur (héros, GLB ~20 Mo) : on l'attend pour afficher la page, et la barre suit ce téléchargement (le plus lourd).
-      const gltfX = new T.GLTFLoader();
-      gltfX.load('assets/cockpit/scene-compressed.glb', (g) => { try { this._setupExterior(T, g); } catch (e) { console.error('exterior', e); this._extReady = true; this._maybeHideLoader(); } },
-        (p) => { if (p.total && this.loaderBarRef.current) { const pct = Math.round(p.loaded / p.total * 100); this.loaderBarRef.current.style.width = pct + '%'; if (this.loaderTxtRef.current) this.loaderTxtRef.current.textContent = 'Chargement… ' + pct + '%'; } },
-        (e) => { console.error('exterior', e); this._extReady = true; this._maybeHideLoader(); });
-
-      // Cabine intérieure (Collada) : chargée en parallèle mais NON bloquante pour l'affichage (visible plus loin, au chapitre cabine).
+      // interior + exterior (Collada, merged)
       const col = new T.ColladaLoader();
-      col.load('assets/a320-interior/model.dae', (c) => { try { this._setupInterior(T, c); } catch (err) { console.error(err); } }, undefined, (err) => { console.error(err); });
+      col.load('assets/a320-interior/model.dae', (c) => { try { this._setupInterior(T, c); } catch (err) { console.error(err); if (this.loaderTxtRef.current) this.loaderTxtRef.current.textContent = 'Erreur de préparation du modèle'; } },
+        (p) => { if (p.total && this.loaderBarRef.current) { const pct = Math.round(p.loaded / p.total * 100); this.loaderBarRef.current.style.width = pct + '%'; if (this.loaderTxtRef.current) this.loaderTxtRef.current.textContent = 'Chargement… ' + pct + '%'; } },
+        (err) => { console.error(err); if (this.loaderTxtRef.current) this.loaderTxtRef.current.textContent = 'Erreur de chargement'; });
+
+      // exterior hero (A320 débrandé, GLB PBR) — used for exterior chapters
+      const gltfX = new T.GLTFLoader();
+      gltfX.load('assets/cockpit/scene-compressed.glb', (g) => { try { this._setupExterior(T, g); } catch (e) { console.error('exterior', e); this._extReady = true; this._maybeHideLoader(); } }, undefined, (e) => { console.error('exterior', e); this._extReady = true; this._maybeHideLoader(); });
     }
 
     _setupExterior(T, g) {
@@ -264,8 +263,7 @@
     }
 
     _maybeHideLoader() {
-      // On affiche dès que l'extérieur (débrandé) ET le hangar sont prêts ; la cabine charge en tâche de fond.
-      if (!this._extReady || !this._hangarReady) return;
+      if (!this._modelReady || !this._extReady) return;
       if (this._loaderHidden) return; this._loaderHidden = true;
       if (this.loaderRef.current) { this.loaderRef.current.style.opacity = '0'; setTimeout(() => { if (this.loaderRef.current) this.loaderRef.current.style.display = 'none'; }, 650); }
     }
