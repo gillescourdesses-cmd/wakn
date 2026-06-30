@@ -336,8 +336,8 @@
     _applyCockpitView() {
       if (!this._cams) return;
       const k = this._cams.find((c) => c.p === 0.72); if (!k) return;
-      if (window.innerWidth > 820) { k.pos = [-14.8, -1.2, 0]; k.look = [-17.6, -1.83, 0]; k.fov = 66; }   // ordinateur : un peu plus zoomé
-      else { k.pos = [-14.4, -1.2, 0]; k.look = [-17.5, -1.82, 0]; k.fov = 73; }                            // mobile : légèrement reculé
+      if (window.innerWidth > 820) { k.pos = [-13.7, -0.9, 0]; k.look = [-17.6, -1.8, 0]; k.fov = 66; }   // ordinateur : reculé/relevé pour ne plus rogner les sièges
+      else { k.pos = [-13.3, -0.9, 0]; k.look = [-17.5, -1.8, 0]; k.fov = 73; }                            // mobile : reculé/relevé pour ne plus rogner les sièges
     }
     _sampleCam(p) { const K = this._cams; let i = 0; while (i < K.length - 1 && p > K[i + 1].p) i++; const a = K[i], b = K[Math.min(i + 1, K.length - 1)]; const sp = (b.p - a.p) || 1; let t = this._c01((p - a.p) / sp); t = t * t * (3 - 2 * t); const L = (u, v2) => u + (v2 - u) * t; return { px: L(a.pos[0], b.pos[0]), py: L(a.pos[1], b.pos[1]), pz: L(a.pos[2], b.pos[2]), lx: L(a.look[0], b.look[0]), ly: L(a.look[1], b.look[1]), lz: L(a.look[2], b.look[2]), fov: L(a.fov || 44, b.fov || 44) }; }
 
