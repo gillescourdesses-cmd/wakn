@@ -154,7 +154,7 @@
       renderer.outputEncoding = T.sRGBEncoding; renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
       this._renderer = renderer;
       const scene = new T.Scene(); this._scene = scene;
-      const camera = new T.PerspectiveCamera(44, 1, 0.05, 6000); this._camera = camera;
+      const camera = new T.PerspectiveCamera(44, 1, 0.02, 3000); this._camera = camera; // near réduit : ne rogne plus les sièges en vue cockpit (far réduit pour garder la précision de profondeur)
       try { const pm = new T.PMREMGenerator(renderer); const env = T.RoomEnvironment ? new T.RoomEnvironment() : new T.Scene(); scene.environment = pm.fromScene(env, 0.04).texture; pm.dispose(); } catch (e) {}
       scene.add(new T.AmbientLight(0xcfe2dd, 0.32));
       const key = new T.DirectionalLight(0xfff2e6, 2.1); key.position.set(20, 38, 26); scene.add(key);
@@ -204,7 +204,9 @@
       gltf.load('assets/hangar/hangar.glb', (hg) => {
         try {
           const h = hg.scene;
-          h.traverse((o) => { const n = o.name || ''; if (/SM_Aircraft|ThirdPersonCharacter|FollowCamera/i.test(n)) o.visible = false; });
+          // masque l'avion intégré + les passerelles de maintenance (docking stations / accès / garde-corps
+          // mobiles) qui traversaient notre avion (réacteur, aile). On garde murs, toit, vitres, piliers, caisses…
+          h.traverse((o) => { const n = o.name || ''; if (/SM_Aircraft|ThirdPersonCharacter|FollowCamera|DockingStation|AccessStand|GEN_VARIABLE/i.test(n)) o.visible = false; });
           this._recolorHangar(T, h);
           const k = 1.55; const grp = new T.Group(); grp.add(h); grp.scale.setScalar(k); grp.position.set(0, -4.1 * k, -9.4 * k); scene.add(grp); this._hangar = grp;
         } catch (e) { console.error('hangar', e); }
@@ -336,8 +338,8 @@
     _applyCockpitView() {
       if (!this._cams) return;
       const k = this._cams.find((c) => c.p === 0.72); if (!k) return;
-      if (window.innerWidth > 820) { k.pos = [-13.7, -0.9, 0]; k.look = [-17.6, -1.8, 0]; k.fov = 66; }   // ordinateur : reculé/relevé pour ne plus rogner les sièges
-      else { k.pos = [-13.3, -0.9, 0]; k.look = [-17.5, -1.8, 0]; k.fov = 73; }                            // mobile : reculé/relevé pour ne plus rogner les sièges
+      if (window.innerWidth > 820) { k.pos = [-14.8, -1.15, 0]; k.look = [-17.6, -1.8, 0]; k.fov = 66; }   // ordinateur : dans le cockpit (sièges OK grâce au near réduit)
+      else { k.pos = [-14.4, -1.15, 0]; k.look = [-17.5, -1.8, 0]; k.fov = 73; }                            // mobile : dans le cockpit
     }
     _sampleCam(p) { const K = this._cams; let i = 0; while (i < K.length - 1 && p > K[i + 1].p) i++; const a = K[i], b = K[Math.min(i + 1, K.length - 1)]; const sp = (b.p - a.p) || 1; let t = this._c01((p - a.p) / sp); t = t * t * (3 - 2 * t); const L = (u, v2) => u + (v2 - u) * t; return { px: L(a.pos[0], b.pos[0]), py: L(a.pos[1], b.pos[1]), pz: L(a.pos[2], b.pos[2]), lx: L(a.look[0], b.look[0]), ly: L(a.look[1], b.look[1]), lz: L(a.look[2], b.look[2]), fov: L(a.fov || 44, b.fov || 44) }; }
 
