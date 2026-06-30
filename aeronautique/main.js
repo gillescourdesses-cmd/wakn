@@ -154,7 +154,7 @@
       renderer.outputEncoding = T.sRGBEncoding; renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
       this._renderer = renderer;
       const scene = new T.Scene(); this._scene = scene;
-      const camera = new T.PerspectiveCamera(44, 1, 0.02, 3000); this._camera = camera; // near réduit : ne rogne plus les sièges en vue cockpit (far réduit pour garder la précision de profondeur)
+      const camera = new T.PerspectiveCamera(44, 1, 0.01, 2000); this._camera = camera; // near très réduit : pas de rognage des sièges, même pendant l'approche du cockpit (far réduit pour la précision)
       try { const pm = new T.PMREMGenerator(renderer); const env = T.RoomEnvironment ? new T.RoomEnvironment() : new T.Scene(); scene.environment = pm.fromScene(env, 0.04).texture; pm.dispose(); } catch (e) {}
       scene.add(new T.AmbientLight(0xcfe2dd, 0.32));
       const key = new T.DirectionalLight(0xfff2e6, 2.1); key.position.set(20, 38, 26); scene.add(key);
