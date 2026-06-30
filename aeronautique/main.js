@@ -41,7 +41,7 @@
     // --- handlers (anciennement renderVals) ---
     openMenu() { const m = this.menuRef.current; if (m) { m.style.transform = 'translateY(0)'; m.style.pointerEvents = 'auto'; } }
     closeMenu() { const m = this.menuRef.current; if (m) { m.style.transform = 'translateY(-100%)'; m.style.pointerEvents = 'none'; } }
-    goStage(e) { if (e && e.preventDefault) e.preventDefault(); const tr = this.trackRef.current; if (!tr) return; const cs = [0.06, 0.31, 0.53, 0.72, 0.92]; const i = +e.currentTarget.dataset.stage; this._idx = i; const sc = tr.offsetHeight - window.innerHeight; this._snapTo(Math.round(tr.offsetTop + cs[i] * sc)); }
+    goStage(e) { if (e && e.preventDefault) e.preventDefault(); this._goTo(+e.currentTarget.dataset.stage); }
 
     _bindUI() {
       document.querySelectorAll('[data-action="openMenu"]').forEach((el) => el.addEventListener('click', () => this.openMenu()));
@@ -56,12 +56,53 @@
       this._initThree();
       this._onMouse = (e) => { this._mt.x = (e.clientX / window.innerWidth - 0.5) * 2; this._mt.y = (e.clientY / window.innerHeight - 0.5) * 2; };
       window.addEventListener('mousemove', this._onMouse, { passive: true });
-      this._stops = [0.06, 0.31, 0.53, 0.72, 0.92];   // alignés sur le centre des sections (cockpit = 0.72)
-      // Défilement natif et continu (pas de capture molette/tactile/clavier), MAIS on guide
-      // l'utilisateur : à l'arrêt du scroll, on rejoint en douceur le chapitre le plus proche.
-      this._lastY = window.scrollY; this._scrollDir = 0;
-      this._onScrollSnap = () => { const y = window.scrollY; this._scrollDir = y - this._lastY; this._lastY = y; if (this._snapping) return; if (this._snapTimer) clearTimeout(this._snapTimer); this._snapTimer = setTimeout(() => this._snap(), 140); };
-      window.addEventListener('scroll', this._onScrollSnap, { passive: true });
+      this._stops = [0.06, 0.31, 0.53, 0.72, 0.92];   // centre de chaque section (cockpit = 0.72)
+      this._section = 0; this._cooldown = false;
+
+      // Défilement par sections « full-page » : un geste = un bloc, animation douce,
+      // impossible de s'arrêter entre deux blocs. Aux extrémités, on relâche le geste
+      // pour laisser le scroll natif atteindre les sections du bas (expertises, footer).
+      const tr0 = this.trackRef.current;
+      const inPinned = () => { const tr = this.trackRef.current; if (!tr) return false; const sc = tr.offsetHeight - window.innerHeight; if (sc <= 0) return false; const r = tr.getBoundingClientRect(); return r.top <= 1 && r.bottom >= window.innerHeight - 1; };
+      const last = () => this._stops.length - 1;
+      const atBoundary = (d) => (d > 0 && this._section >= last()) || (d < 0 && this._section <= 0);
+      const step = (d) => {
+        const tr = this.trackRef.current; if (!tr) return;
+        const sc = tr.offsetHeight - window.innerHeight; if (sc <= 0) return;
+        clearTimeout(this._cdTimer);
+        this._cdTimer = setTimeout(() => { this._cooldown = false; }, 160); // avale l'inertie : ré-armé à chaque geste
+        if (this._snapping || this._cooldown) return;                        // déjà en transition : on ignore
+        // resynchronise la section sur la position réelle (réentrée depuis le bas, barre de défilement…)
+        const p = (window.scrollY - tr.offsetTop) / sc; let ai = 0, bd = 9; this._stops.forEach((s, k) => { const dd = Math.abs(p - s); if (dd < bd) { bd = dd; ai = k; } }); this._section = ai;
+        const ni = Math.max(0, Math.min(last(), this._section + d));
+        if (ni === this._section) return;
+        this._cooldown = true;
+        this._goTo(ni);
+      };
+      this._onWheel = (e) => { if (!inPinned()) return; const d = e.deltaY > 0 ? 1 : (e.deltaY < 0 ? -1 : 0); if (!d) return; if (atBoundary(d)) return; e.preventDefault(); step(d); };
+      window.addEventListener('wheel', this._onWheel, { passive: false });
+      this._onKey = (e) => { let d = 0; if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ' || e.key === 'Spacebar') d = 1; else if (e.key === 'ArrowUp' || e.key === 'PageUp') d = -1; if (!d) return; if (!inPinned() || atBoundary(d)) return; e.preventDefault(); step(d); };
+      window.addEventListener('keydown', this._onKey);
+      this._touchY = null;
+      this._onTS = (e) => { this._touchY = e.touches && e.touches[0] ? e.touches[0].clientY : null; };
+      this._onTM = (e) => {
+        if (!inPinned() || this._touchY == null) return;
+        const y = e.touches && e.touches[0] ? e.touches[0].clientY : this._touchY;
+        const dy = this._touchY - y; const d = dy > 0 ? 1 : (dy < 0 ? -1 : 0);
+        if (atBoundary(d)) return;            // laisse sortir vers le contenu du bas / le haut
+        e.preventDefault();                    // bloque le scroll natif dans la zone 3D (pas d'arrêt entre blocs)
+        if (Math.abs(dy) < 28) return;         // attend un swipe franc
+        step(d); this._touchY = null;
+      };
+      window.addEventListener('touchstart', this._onTS, { passive: true });
+      window.addEventListener('touchmove', this._onTM, { passive: false });
+    }
+    _goTo(i) {
+      const tr = this.trackRef.current; if (!tr) return;
+      const sc = tr.offsetHeight - window.innerHeight; if (sc <= 0) return;
+      i = Math.max(0, Math.min(this._stops.length - 1, i));
+      this._section = i;
+      this._snapTo(Math.round(tr.offsetTop + this._stops[i] * sc));
     }
     _snap() {
       const tr = this.trackRef.current; if (!tr) return;
@@ -283,7 +324,7 @@
       const tr = this.trackRef.current;
       if (tr) { const sc = tr.offsetHeight - window.innerHeight; if (sc > 0) this._tp = Math.max(0, Math.min(1, (-tr.getBoundingClientRect().top) / sc)); }
       if (window.__waknP != null) this._tp = window.__waknP;
-      this._p += (this._tp - this._p) * 0.1;
+      this._p += (this._tp - this._p) * 0.25;
       this._mo.x += (this._mt.x - this._mo.x) * 0.05; this._mo.y += (this._mt.y - this._mo.y) * 0.05;
       this._update(this._p);
       const nl = this.navLogoRef.current, ex = this.expertiseRef.current;
