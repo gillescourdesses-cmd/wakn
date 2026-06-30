@@ -52,7 +52,7 @@
     mount() {
       this._bindUI();
       this._p = 0; this._tp = 0; this._t = 0; this._mt = { x: 0, y: 0 }; this._mo = { x: 0, y: 0 };
-      this._modelReady = false; this._extReady = false; this._loaderHidden = false; this._idx = 0;
+      this._modelReady = false; this._extReady = false; this._hangarReady = false; this._loaderHidden = false; this._idx = 0;
       this._initThree();
       this._onMouse = (e) => { this._mt.x = (e.clientX / window.innerWidth - 0.5) * 2; this._mt.y = (e.clientY / window.innerHeight - 0.5) * 2; };
       window.addEventListener('mousemove', this._onMouse, { passive: true });
@@ -207,19 +207,20 @@
           h.traverse((o) => { const n = o.name || ''; if (/SM_Aircraft|ThirdPersonCharacter|FollowCamera/i.test(n)) o.visible = false; });
           this._recolorHangar(T, h);
           const k = 1.55; const grp = new T.Group(); grp.add(h); grp.scale.setScalar(k); grp.position.set(0, -4.1 * k, -9.4 * k); scene.add(grp); this._hangar = grp;
-          this._cullHangarGantries();   // masque uniquement les passerelles qui chevauchent l'avion (garde le reste : look FAL)
-        } catch (e) { console.error('hangar', e); }
-      }, undefined, (e) => { console.error('hangar', e); });
+          this._cullHangarGantries();
+          this._hangarReady = true; this._maybeHideLoader();
+        } catch (e) { console.error('hangar', e); this._hangarReady = true; this._maybeHideLoader(); }
+      }, undefined, (e) => { console.error('hangar', e); this._hangarReady = true; this._maybeHideLoader(); });
 
-      // interior + exterior (Collada, merged)
-      const col = new T.ColladaLoader();
-      col.load('assets/a320-interior/model.dae', (c) => { try { this._setupInterior(T, c); } catch (err) { console.error(err); if (this.loaderTxtRef.current) this.loaderTxtRef.current.textContent = 'Erreur de préparation du modèle'; } },
-        (p) => { if (p.total && this.loaderBarRef.current) { const pct = Math.round(p.loaded / p.total * 100); this.loaderBarRef.current.style.width = pct + '%'; if (this.loaderTxtRef.current) this.loaderTxtRef.current.textContent = 'Chargement… ' + pct + '%'; } },
-        (err) => { console.error(err); if (this.loaderTxtRef.current) this.loaderTxtRef.current.textContent = 'Erreur de chargement'; });
-
-      // exterior hero (A320 débrandé, GLB PBR) — used for exterior chapters
+      // Avion extérieur (héros, GLB ~20 Mo) : on l'attend pour afficher la page, et la barre suit ce téléchargement (le plus lourd).
       const gltfX = new T.GLTFLoader();
-      gltfX.load('assets/cockpit/scene-compressed.glb', (g) => { try { this._setupExterior(T, g); } catch (e) { console.error('exterior', e); this._extReady = true; this._maybeHideLoader(); } }, undefined, (e) => { console.error('exterior', e); this._extReady = true; this._maybeHideLoader(); });
+      gltfX.load('assets/cockpit/scene-compressed.glb', (g) => { try { this._setupExterior(T, g); } catch (e) { console.error('exterior', e); this._extReady = true; this._maybeHideLoader(); } },
+        (p) => { if (p.total && this.loaderBarRef.current) { const pct = Math.round(p.loaded / p.total * 100); this.loaderBarRef.current.style.width = pct + '%'; if (this.loaderTxtRef.current) this.loaderTxtRef.current.textContent = 'Chargement… ' + pct + '%'; } },
+        (e) => { console.error('exterior', e); this._extReady = true; this._maybeHideLoader(); });
+
+      // Cabine intérieure (Collada) : chargée en parallèle mais NON bloquante pour l'affichage (visible plus loin, au chapitre cabine).
+      const col = new T.ColladaLoader();
+      col.load('assets/a320-interior/model.dae', (c) => { try { this._setupInterior(T, c); } catch (err) { console.error(err); } }, undefined, (err) => { console.error(err); });
     }
 
     _setupExterior(T, g) {
@@ -257,28 +258,14 @@
     }
 
     _cullHangarGantries() {
-      // On garde TOUTES les passerelles (ambiance FAL) et on ne retire que le cluster
-      // autour de la passerelle qui pénètre le plus l'avion (celle au niveau du moteur).
-      if (this._gantriesCulled || !this._hangar || !this._planeBox) return;
-      this._gantriesCulled = true;
-      const T = window.THREE;
-      this._hangar.updateMatrixWorld(true);
-      const plane = this._planeBox;
-      const gant = [];
-      this._hangar.traverse((o) => {
-        if (!o.isMesh || !/DockingStation|AccessStand|GEN_VARIABLE/i.test(o.name || '')) return;
-        const bb = new T.Box3().setFromObject(o);
-        if (!bb.isEmpty()) gant.push({ o: o, c: bb.getCenter(new T.Vector3()), bb: bb });
-      });
-      const overlap = (a, b) => { const ix = Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x); const iy = Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y); const iz = Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z); return (ix > 0 && iy > 0 && iz > 0) ? ix * iy * iz : 0; };
-      let worst = null, wv = 0;
-      gant.forEach((g) => { const v = overlap(g.bb, plane); if (v > wv) { wv = v; worst = g; } });
-      if (!worst) return;                                  // aucune passerelle ne pénètre l'avion : on ne retire rien
-      gant.forEach((g) => { if (g.c.distanceTo(worst.c) < 4.5) g.o.visible = false; });  // retire le cluster autour du pire chevauchement
+      // Toutes les passerelles restent visibles (ambiance FAL). Le ciblage automatique
+      // de la seule passerelle du moteur n'est pas fiable à l'aveugle (le modèle d'avion
+      // n'a pas de noms exploitables) : on n'en masque donc aucune pour l'instant.
     }
 
     _maybeHideLoader() {
-      if (!this._modelReady || !this._extReady) return;
+      // On affiche dès que l'extérieur (débrandé) ET le hangar sont prêts ; la cabine charge en tâche de fond.
+      if (!this._extReady || !this._hangarReady) return;
       if (this._loaderHidden) return; this._loaderHidden = true;
       if (this.loaderRef.current) { this.loaderRef.current.style.opacity = '0'; setTimeout(() => { if (this.loaderRef.current) this.loaderRef.current.style.display = 'none'; }, 650); }
     }
